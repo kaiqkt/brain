@@ -22,7 +22,7 @@ Flat top-level by life-domain. No `personal/` or `work/` wrapper.
 | `people/` | Contact notes (one file per person) |
 | `raw/` | Read-only sources to ingest. **Never modify.** |
 
-Vault maintenance scripts live in `.claude/scripts/` (lint, reindex). They are deterministic and run by hook on `git push` — no AI required.
+Vault maintenance scripts live in `.claude/scripts/`. Lint is deterministic and runs on `git push`. `index.md` is AI-maintained — the AI updates it when notes are added or changed.
 
 New top-level folders may be added when a new domain emerges (e.g. `finance/`). Do not nest by ownership.
 
@@ -151,15 +151,15 @@ Obsidian wiki links: `[[page_name]]` or `[[page_name|display label]]`.
 
 ## Index
 
-`index.md` at vault root. **Auto-generated.** Do not hand-edit.
+`index.md` at vault root. **AI-maintained** — updated by the AI whenever notes are added or changed. No `type` column. Summaries are written by the AI, not extracted from frontmatter.
 
-Regenerate with:
+Check coverage drift (notes missing from or stale in index):
 
 ```bash
 python3 .claude/scripts/reindex.py
 ```
 
-Auto-runs after every `git push` via git pre-push hook.
+Runs automatically (informational) after every `git push` via pre-push hook.
 
 ## AI Role
 
@@ -177,9 +177,9 @@ Deterministic checks live in `.claude/scripts/` to avoid spending AI calls on me
 | Script | Purpose |
 |---|---|
 | `.claude/scripts/lint.py` | Frontmatter required-fields check, filename snake_case, date format, dead wiki-links |
-| `.claude/scripts/reindex.py` | Walk vault, regenerate `index.md` |
+| `.claude/scripts/reindex.py` | Coverage check — reports notes missing from or stale in `index.md`. Does not write anything. |
 
-Both run automatically before every `git push` via git pre-push hook (`.claude/hooks/pre-push.sh`). Lint failure blocks the push. Reindex always runs; if `index.md` changed, the push proceeds with a warning to commit the update.
+Both run automatically before every `git push` via git pre-push hook (`.claude/hooks/pre-push.sh`). Lint failure blocks the push. Reindex is informational only.
 
 Install the hook once after `git init`:
 
@@ -205,6 +205,8 @@ Tracked in `.obsidian/` — copied from prior vault.
 ## Maintenance Rules
 
 - `raw/` is read-only. Never edit.
-- Lint + reindex run automatically after `git push`. Manual run: `python3 .claude/scripts/lint.py` and `python3 .claude/scripts/reindex.py`.
+- Lint runs automatically after `git push` and blocks on failure. Manual: `python3 .claude/scripts/lint.py`.
+- Coverage check runs informational after `git push`. Manual: `python3 .claude/scripts/reindex.py`.
+- When adding or changing notes, update `index.md` with a proper summary.
 - Update `CLAUDE.md` when introducing a new folder, schema, or workflow.
 - When a person is mentioned in a note (task, daily, project), create or link their `people/<name>.md`.

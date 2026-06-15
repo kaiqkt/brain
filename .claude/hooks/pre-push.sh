@@ -1,8 +1,9 @@
 #!/bin/bash
-# Git pre-push hook — runs vault lint + reindex before every push.
+# Git pre-push hook — runs vault lint + index coverage check before every push.
 #
-# Lint failure blocks the push. Reindex regenerates index.md; if it changed,
-# the push proceeds with a warning (commit the update next time).
+# Lint failure blocks the push.
+# Reindex is informational — reports notes missing from or stale in index.md.
+# index.md is AI-maintained; update it manually when the check reports drift.
 #
 # Install:
 #   cd brain && ln -sf ../../.claude/hooks/pre-push.sh .git/hooks/pre-push
@@ -24,13 +25,7 @@ if ! python3 .claude/scripts/lint.py; then
 fi
 
 echo
-echo "[vault] reindex"
+echo "[vault] index coverage"
 python3 .claude/scripts/reindex.py
-
-if ! git diff --quiet -- index.md; then
-  echo
-  echo "[vault] index.md regenerated — push proceeds, but commit the update:" >&2
-  echo "        git add index.md && git commit -m 'chore: reindex' && git push" >&2
-fi
 
 exit 0
